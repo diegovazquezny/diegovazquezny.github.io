@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Scaling SQL Databases (System Design) - Diego Vazquez</title>
+    <meta name="description" content="Algos, system design, and more by Diego Vazquez.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="main">
+      <h1>Algos, system design, and more...</h1>
+      <article class="blog-entry-container">
+        <h3>10/11/2023</h3>
+        <h1>Scaling SQL Databases (System Design)</h1>
+        <p>Learn several ways to scale a SQL database for your next system design interview.</p>
+        <p>At some point when designing a system you&apos;ll have to make a decision about the type of database your application will use. The most common type of databases used in production applications are relational, or SQL databases. Relational databases excel at querying complex relationships amongst your structured data. Typically, if your data relates to other data, you&apos;ll want to use a SQL database.</p>
+        <p>One database is suitable for most small to medium sized applications. But what happens when your business begins to grow and your only database is slowing down the performance of your application? There are several strategies you can use to speed up performance of your database. First, you should determine what is causing the decrease in performance. Is your application read heavy? Is it write-heavy? Did you identify queries that take significantly longer than other queries? Are you storing massive amounts of data but usually only read recent data? Have you looked into upgrading the hardware your database server runs on?</p>
+        <h2>Read Heavy</h2>
+        <h3>Read Replicas</h3>
+        <p>Offloading reads to read-only replicas of your database can increase performance if you have determined that  high volume read traffic is slowing down your application. Read replicas contain the same data that your primary database has and can be strategically placed in geographical regions to provide all your users with fast performance.</p>
+        <p>Read replicas are updated and kept in sync with the primary database using asynchronous replication. This is not an instant process and may lead to replication lag, or replicas falling behind the primary and not containing up to date data. In order to mitigate replication lag, you can batch large operations to avoid making massive changes to the database in one query. For example, rather than updating 10 million rows in your primary database in one query, batch that query into smaller queries that only touch 10,000 rows at a time. Smaller queries can be quickly processed by the replicas and keep your databases in sync.</p>
+        <p>You might also identify services or clients that disproportionately hammer down on your read only replicas. Throttling those reads might improve performance overall in your application. For example, you have an asynchronous job that builds end of day sales reports. This job could potentially read a large amount of data in a short period of time, which may negatively affect read performance elsewhere. By throttling the queries and placing them in a queue, the asynchronous job can gradually query the database and complete the reports without degrading performance.</p>
+        <h3>Caching</h3>
+        <p>Frequently queried data can be cached in an in-memory key value store to speed up read performance. For example, product information on an ecommerce site will be frequently shown to users. Rather than query the read replicas each time, the output of the query can be cached and subsequent queries will hit the cache instead of the database. In order to ensure data in your cache is not stale, you&apos;ll want to make sure the data is updated enough so it does not fall out of sync with the database. Caches can also be placed strategically in geographical regions, further improving read performance.</p>
+        <h3>Indexing</h3>
+        <p>Data that is frequently queried should be indexed. Database indexes are data structures that improve read performance by allowing your database to search in sub-linear performance. Many indexes are capable of O(log(N)) or even O(1) lookup performance.</p>
+        <p>Indexes greatly speed up read performance at a cost of slowing down write performance. Any changes to the table will require the index to update. You should be wary of indexing write-heavy tables. It&apos;s also good to audit indexes and remove any that are infrequently used. An unused index is taking up storage that could be used elsewhere.</p>
+        <h2>Write Heavy</h2>
+        <h3>Normalization</h3>
+        <p>Normalization structures a relational database in a way that reduces data redundancy and organized data efficiently. For example, a user name should not be stored in multiple tables. Instead, it should only be included in the User table and referenced with a user id. Normalization ensures that our writes are not being duplicated across tables. It also keeps our tables as small as possible.</p>
+        <p>In read-heavy databases, normalization might require more JOINs across multiple tables. which may decrease performance.</p>
+        <h3>Vertical Partitioning</h3>
+        <p>Large tables can be vertically partitioned into smaller tables. This can be useful for a table that has columns that are frequently updated but others that are relatively static. The frequently updated columns could be partitioned into a new table or database, and the other data could be placed in a lower-cost database. Vertical partitioning is also useful for removing redundant or unused columns.</p>
+        <p>The tradeoff of verical partitioning is similar to normalizatoin. Read performance might degrade if queries require complex JOINs across tables.</p>
+        <h3>Sharding - Horizontal Partitioning</h3>
+        <p>A database can be horizontally partitioned by rows into several unique databases. When the application server wants to write to the database, it creates a shard key that is used to determine which shard will receive the write. Shard keys can be made up of one or more columns in a table. Determining which columns will make up your shard key are dependent on the needs of your application. It is important to choose a shard key that will evenly spread out your data across your shards to avoid hotspots. A poorly selected shard key could result in one or more shards getting a disproportionate amount of activity.</p>
+        <p>Sharding pairs well with a services architecture. Since each of your services will have its own database, there&apos;s a high likelihood that there are strong relationships between the data. For example, a database that only contains store information could be geo sharded, or location-based sharding. This allows us to create a shard key that spreads our data evenly across the shards. However, keep in mind that hotspots are always possible so selecting a shard key is not a trivial decision.</p>
+        <p>Once a shard key strategy is selected, we can pass the key into a hashing algorithm and find the modulo n (number of database shards) to determine which shard receives the operation. This works well if the number of shards remains consistent. But in the real world, shards will be added or removed, based on business needs. The naive approach of mapping keys directly to a shard could require us to remap our entire distributed database if the number of shards changes.  </p>
+        <p>To avoid complications with adding or removing shards, we can use consistent hashing. Rather than point our keys to a specific shard, the keys are associated with a region of the hash ring and will use the shard closest to their position. If their shard goes down, the keys can move along the ring and use the next available shard. Most of the other shards are not affected. At most, k/n shards need to be remapped, where k is the number of keys and n is the number of servers. Data can be replicated onto adjacent nodes to minimize data loss if a shard goes down.</p>
+        <h3>Conclusion</h3>
+        <p>There is no one size fits all approach to scaling a database. In some cases, upgrading your server&apos;s hardware can be enough to get a signficant performance boost. But for applications at scale, a systematic approach needs to be taken. Diagnosing the needs of your busniess and allocating resources to support those needs is crucial. Keep in mind that optimizing your database for reads could result in degraded performance for writes, and vice versa.  </p>
+      </article>
+    </main>
+    <footer class="footer">
+      <div class="footer-container">
+        <a href="/index.html" target="_blank">Home</a>
+        <a href="/about.html" target="_blank">About me</a>
+        <a href="https://www.linkedin.com/in/diegovazquezny/" target="_blank">LinkedIn</a>
+        <a href="https://github.com/diegovazquezny/" target="_blank">Github</a>
+      </div>
+    </footer> 
+  </body>
+</html>
