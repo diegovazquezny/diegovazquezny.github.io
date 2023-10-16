@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Back of the Envelope Calculations (System Design) - Diego Vazquez</title>
+    <meta name="description" content="Algos, system design, and more by Diego Vazquez.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="main">
+      <h1>Algos, system design, and more...</h1>
+      <article class="blog-entry-container">
+        <h3>10/16/2023</h3>
+        <h1>Back of the Envelope Calculations (System Design)</h1>
+        <h3>NOTE: This article is in progress.</h3>
+        <p>Back of the envelope calculations can help you quantify the scale of your application and structure your design in an optimal way. Whenever possible, round your numbers to make the arithmetic easier. It is also far easier to multiply large numbers in scientific notation than it is in standard notation.</p>
+        <p>We will be designing a Twitter clone.</p>
+        <h2>Daily Active Users (DAU)</h2>
+        <h3>Assumptions</h3>
+        <ul>
+          <li>500M MAU (monthly active users)</li>
+          <li>Half of the MAU use the app daily</li>
+        </ul>
+        <h3>Calculations</h3>
+        <ul>
+          <li>DAU = 250M</li>
+          <ul>
+            <li>Half of the MAU use the app daily</li>
+          </ul>
+        </ul>
+        <h2>Database Reads and Writes</h2>
+        <h3>Assumptions</h3>
+        <ul>
+          <li>100k seconds in a day</li>
+          <li>Users read 100 tweets on average and post 1 tweet per day</li>
+        </ul>
+        <h3>Reads</h3>
+        <ul>
+          <li>Reads per second = 250k</li>
+          <ul>
+            <li>250 million DAU * 100 tweets = 2.5 x 10^8 * 1 x 10^2 = 2.5 x 10^10 = 25 billion reads per day</li>
+            <li>25 billion reads / 100k seconds per day = 2.5 x 10^10 / 1 x 10^5 = 2.5 x 10^5 = 250k reads per second</li>
+          </ul>
+        </ul>
+        <h3>Writes</h3>
+        <ul>
+          <li>Writes per second = 2500</li>
+          <ul>
+            <li>Our ratio of reads to writes is 100:1, so 250k reads per second / 1000 = 2500 writes per second</li>
+          </ul>
+        </ul>
+        <h2>Storage requirements</h2>
+        <h3>Assumptions</h3>
+        <ul>
+          <li>1 character equals one byte</li>
+          <li>Average tweet is 200 characters long</li>
+          <li>&frac14; tweets contain an image</li>
+          <li>Average image size is 400kb</li>
+          <li>Don't support video uploads</li>
+          <li>Metadata is 200kb per tweet</li>
+        </ul>
+        <h3>Calculations</h3>
+        <ul>
+          <li>Average size of tweet = 120kb</li>
+          <ul>
+            <li>200 characters * 1 byte = 200 bytes + 400kb / 4 = .2kb + 100kb = 120kb</li>
+          </ul>
+        </ul>
+        <ul>
+          <li>With metadata ~ 400kb</li>
+          <ul>
+            <li>120kb + 200kb = 320kb. Round up to 400kb or 4 x 10^5 bytes</li>
+          </ul>
+        </ul>
+        <ul>
+          <li>Total storage per day = 100 terabytes</li>
+          <ul>
+            <li>Remember we have 250M tweets per day = 2.5 x 10^8</li>
+            <li>2.5 x 10^8 * 4 x 10^5 = 10 x 10^13 bytes = 100 terabytes</li>
+          </ul>
+        </ul>
+        <h2>Resources</h2>
+        <a href="https://robertovitillo.com/back-of-the-envelope-estimation-hacks/">https://robertovitillo.com/back-of-the-envelope-estimation-hacks/</a>
+        <a href="https://servebolt.com/articles/calculate-how-many-simultaneous-website-visitors/">https://servebolt.com/articles/calculate-how-many-simultaneous-website-visitors/</a>
+        <a href="https://dev.to/ievolved/how-i-calculate-capacity-for-systems-design-3477">https://dev.to/ievolved/how-i-calculate-capacity-for-systems-design-3477</a>
+      </article>
+    </main>
+    <footer class="footer">
+      <div class="footer-container">
+        <a href="/index.html">Home</a>
+        <a href="/about.html">About me</a>
+        <a href="https://www.linkedin.com/in/diegovazquezny/" target="_blank">LinkedIn</a>
+        <a href="https://github.com/diegovazquezny/" target="_blank">Github</a>
+      </div>
+    </footer> 
+  </body>
+</html>
